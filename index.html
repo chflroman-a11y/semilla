@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Semilla — banco del pueblo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,700&family=Outfit:wght@380;500;620&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/app.css" />
+</head>
+<body>
+  <div class="welcome" id="welcome">
+    <div class="brand">
+      <div class="mark">S</div>
+      <div>
+        <div class="eyebrow">Caja comunitaria</div>
+        <strong>Semilla</strong>
+      </div>
+    </div>
+    <h1>El banco que nace en un pueblo y se abre en el siguiente.</h1>
+    <p class="lead">Ahorro de socios, préstamos que aprueba la asamblea y un fondo común que financia la siguiente caja.</p>
+    <label>Tu nombre</label>
+    <input id="inName" placeholder="Ej. Roman" value="Roman" />
+    <label>Pueblo donde nace</label>
+    <input id="inPueblo" placeholder="Ej. San Lucas" value="San Lucas" />
+    <label>Estado</label>
+    <input id="inEstado" value="Puebla" />
+    <div class="actions">
+      <button class="btn solid" id="startBtn" type="button">Abrir la caja</button>
+      <button class="btn ghost" id="demoBtn" type="button">Ver demo</button>
+    </div>
+    <p class="note">Prototipo de producto. Captar ahorro del público en México exige figura legal. Semilla muestra la operación, no la autorización.</p>
+  </div>
+
+  <div class="app gate" id="app">
+    <header class="top">
+      <div class="brand">
+        <div class="mark">S</div>
+        <div>
+          <div class="eyebrow" id="eyebrow">Semilla</div>
+          <h1 id="title" style="font-size:22px">Caja</h1>
+        </div>
+      </div>
+      <button class="pueblo-switch" id="switchBtn" type="button">Cambiar</button>
+    </header>
+
+    <section class="screen on" id="scr-home">
+      <div class="hero">
+        <div class="label">Tu ahorro en la caja</div>
+        <div class="balance" id="saldo">$0</div>
+        <div class="stats">
+          <div class="stat"><b id="fondo">$0</b><span>Fondo común</span></div>
+          <div class="stat"><b id="socios">0</b><span>Socios activos</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="chip primary" data-open="ahorro" type="button">Ahorrar</button>
+        <button class="chip" data-open="prestamo" type="button">Pedir préstamo</button>
+      </div>
+      <div class="section-title"><h2>Movimientos</h2><span id="cajaName"></span></div>
+      <div id="moves"></div>
+    </section>
+
+    <section class="screen" id="scr-asamblea">
+      <div class="section-title"><h2>Asamblea</h2><span>Un socio, un voto</span></div>
+      <p class="sub" style="margin:-4px 2px 12px">Los préstamos y las cajas nuevas los aprueba el pueblo.</p>
+      <div id="votes"></div>
+    </section>
+
+    <section class="screen" id="scr-prestamos">
+      <div class="section-title"><h2>Préstamos</h2><span>Del fondo común</span></div>
+      <div id="loans"></div>
+    </section>
+
+    <section class="screen" id="scr-socios">
+      <div class="section-title">
+        <h2>Socios</h2>
+        <button class="linkish" id="addSocio" type="button">Agregar</button>
+      </div>
+      <div id="people"></div>
+      <p class="sub" id="socioCount"></p>
+    </section>
+
+    <section class="screen" id="scr-mapa">
+      <div class="section-title">
+        <h2>Expansión</h2>
+        <button class="linkish" id="addPueblo" type="button">Otro pueblo</button>
+      </div>
+      <div class="card">
+        <div class="kicker">Regla de crecimiento</div>
+        <p class="sub" style="margin-top:6px">Una caja nueva se siembra cuando el pueblo origen junta 8 socios y $15,000 en fondo común, y una comunidad vecina lo pide. La asamblea suelta $3,500 de fondo semilla.</p>
+        <div class="bar" style="margin-top:12px"><i id="expBar" style="width:0%"></i></div>
+        <div class="sub" id="expHint" style="margin-top:8px"></div>
+      </div>
+      <div class="map" id="map"></div>
+      <button class="btn ghost" id="resetBtn" type="button" style="width:100%;margin-top:8px">Empezar de cero</button>
+    </section>
+
+    <nav class="nav">
+      <button class="on" data-tab="home" type="button"><span class="ic">⌂</span>Caja</button>
+      <button data-tab="asamblea" type="button"><span class="ic">☰</span>Asamblea</button>
+      <button data-tab="prestamos" type="button"><span class="ic">↺</span>Préstamos</button>
+      <button data-tab="socios" type="button"><span class="ic">☺</span>Socios</button>
+      <button data-tab="mapa" type="button"><span class="ic">✧</span>Sembrar</button>
+    </nav>
+  </div>
+
+  <div class="sheet" id="sheet">
+    <div class="panel">
+      <div class="eyebrow" id="sheetKicker">Movimiento</div>
+      <h2 id="sheetTitle" style="font-size:28px;margin-top:4px">Ahorrar</h2>
+      <div id="sheetBody"></div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>
