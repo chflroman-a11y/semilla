@@ -190,3 +190,16 @@ body.ready .gate { display: block; }
 body.ready .welcome { display: none; }
 .kicker { color: var(--gold); font-weight: 620; letter-spacing: 0.14em; font-size: 12px; text-transform: uppercase; }
 .linkish { background: none; border: 0; color: var(--terra-deep); font-weight: 620; padding: 0; }
+.tank {
+  height: 168px; border-radius: 28px 28px 18px 18px;
+  border: 1px solid var(--line); background: #efe4d2;
+  position: relative; overflow: hidden; margin-top: 12px;
+}
+.tank i {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(180deg, #d7e0cc, #5e7358);
+}
+.tank b {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  font-family: Fraunces, serif; font-size: 28px;
+}

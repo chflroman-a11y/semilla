@@ -2,17 +2,21 @@ import {
   FONDO_SIEMBRA,
   SEMILLA_FONDO,
   SEMILLA_SOCIOS,
+  abonarCisterna,
   abonarPrestamo,
   agregarSocio,
   ahorrar,
   cajaActiva,
   clearState,
+  colocarCredito,
   money,
   pedirPrestamo,
   pedirSiembra,
   progresoSiembra,
   proponerPueblo,
   puedeSembrar,
+  recargarCisterna,
+  resumenCisterna,
   saveState,
   socioActual,
   votar,
@@ -140,6 +144,26 @@ export function render(current) {
       ${action}
     </div>`;
   }).join("");
+
+  const cisterna = resumenCisterna(state);
+  const nivel = Math.round(cisterna.nivel * 100);
+  document.getElementById("tankFill").style.height = `${nivel}%`;
+  document.getElementById("tankLabel").textContent = `${nivel}% colocado`;
+  document.getElementById("cisternaLibre").textContent = money(cisterna.disponible);
+  document.getElementById("cisternaMora").textContent = money(cisterna.mora);
+  document.getElementById("cisternaRegla").textContent = `Tanque de ${money(cisterna.capacidad)}. Tope por cliente ${money(cisterna.tope)}. Plazo ${cisterna.plazoDias} días. Comisión ${Math.round(cisterna.comision * 100)}%, se suma al saldo.`;
+  document.getElementById("cisternaCreditos").innerHTML = cisterna.creditos.length
+    ? cisterna.creditos.map((c) => `
+      <div class="card">
+        <div class="loan">
+          <div class="avatar">${c.who.slice(0, 1)}</div>
+          <div class="grow"><div class="name">${c.who}</div><div class="sub">${c.why} · ${c.plazo} días</div></div>
+          <div class="amt">${money(c.left)}</div>
+        </div>
+        <div style="margin-top:8px"><span class="pill ${c.status === "en mora" ? "wait" : c.status === "liquidado" ? "live" : "lock"}">${c.status}</span></div>
+        ${c.left > 0 ? `<div class="actions"><button class="btn olive small" data-cisterna-pay="${c.id}">Abonar y rellenar</button></div>` : ""}
+      </div>`).join("")
+    : `<div class="card"><div class="sub">La cisterna está llena. Todavía no hay crédito colocado.</div></div>`;
 }
 
 export function wire() {
@@ -147,11 +171,12 @@ export function wire() {
     b.onclick = () => show(b.dataset.tab);
   });
   document.body.addEventListener("click", (event) => {
-    const el = event.target.closest("[data-open],[data-vote],[data-pay],[data-seed],[data-go]");
+    const el = event.target.closest("[data-open],[data-vote],[data-pay],[data-seed],[data-go],[data-cisterna-pay]");
     if (!el) return;
     if (el.dataset.open) return openAction(el.dataset.open);
     if (el.dataset.vote) return cast(el.dataset.vote, el.dataset.yes === "1");
     if (el.dataset.pay) return pay(el.dataset.pay);
+    if (el.dataset.cisternaPay) return payCisterna(el.dataset.cisternaPay);
     if (el.dataset.seed) return seed(el.dataset.seed);
     if (el.dataset.go) return go(el.dataset.go);
   });
@@ -205,6 +230,24 @@ function pay(loanId) {
     closeSheet();
     persist();
     toast(`Abono de ${money(result.pago)}`);
+  };
+}
+
+function payCisterna(creditId) {
+  openSheet(`
+    <label>Abono</label>
+    <input id="amt" type="number" min="50" step="50" value="500" />
+    <div class="actions">
+      <button class="btn ghost" id="closeSheet" type="button">Cerrar</button>
+      <button class="btn solid" id="doCisternaPay" type="button">Abonar</button>
+    </div>
+    <p class="note">Lo cobrado vuelve al disponible. No se va a la caja del pueblo.</p>`, "Rellena el tanque", "Abono a la cisterna");
+  document.getElementById("doCisternaPay").onclick = () => {
+    const result = abonarCisterna(state, creditId, document.getElementById("amt").value);
+    if (!result.ok) return toast(result.error);
+    closeSheet();
+    persist();
+    toast(`Volvieron ${money(result.pago)}`);
   };
 }
 
@@ -280,6 +323,45 @@ function openAction(kind) {
       closeSheet();
       persist();
       toast("Pedido anotado");
+    };
+  }
+  if (kind === "colocar") {
+    const r = resumenCisterna(state);
+    openSheet(`
+      <label>Cliente</label>
+      <input id="who" placeholder="Nombre del cliente" />
+      <label>Monto a entregar</label>
+      <input id="amt" type="number" min="500" step="100" value="5000" />
+      <label>Para qué</label>
+      <input id="why" value="Capital de trabajo" />
+      <div class="actions">
+        <button class="btn ghost" id="closeSheet" type="button">Cerrar</button>
+        <button class="btn solid" id="doColocar" type="button">Colocar</button>
+      </div>
+      <p class="note">Disponible ${money(r.disponible)}. Tope ${money(r.tope)}. La comisión del 5% se suma a lo que debe.</p>`, "Sale del tanque", "Colocar crédito");
+    document.getElementById("doColocar").onclick = () => {
+      const result = colocarCredito(state, document.getElementById("who").value, document.getElementById("amt").value, document.getElementById("why").value);
+      if (!result.ok) return toast(result.error);
+      closeSheet();
+      persist();
+      toast(`Colocado. Debe ${money(result.cargo)}`);
+    };
+  }
+  if (kind === "recargar") {
+    openSheet(`
+      <label>Capital propio que entra al tanque</label>
+      <input id="amt" type="number" min="500" step="500" value="10000" />
+      <div class="actions">
+        <button class="btn ghost" id="closeSheet" type="button">Cerrar</button>
+        <button class="btn solid" id="doRecarga" type="button">Recargar</button>
+      </div>
+      <p class="note">Esto sube la capacidad. No es ahorro de socios.</p>`, "Llave de capital", "Recargar cisterna");
+    document.getElementById("doRecarga").onclick = () => {
+      const result = recargarCisterna(state, document.getElementById("amt").value);
+      if (!result.ok) return toast(result.error);
+      closeSheet();
+      persist();
+      toast(`Tanque en ${money(resumenCisterna(state).capacidad)}`);
     };
   }
   if (kind === "switch") {

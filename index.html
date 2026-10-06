@@ -67,6 +67,24 @@
       <div id="votes"></div>
     </section>
 
+    <section class="screen" id="scr-cisterna">
+      <div class="card">
+        <div class="kicker">Fondo revolvente del negocio</div>
+        <h2 style="font-size:28px;margin-top:4px">Cisterna</h2>
+        <div class="tank"><i id="tankFill" style="height:0%"></i><b id="tankLabel">0%</b></div>
+        <div class="stats" style="margin-top:12px">
+          <div class="stat" style="background:#f7f1e6;color:var(--ink);border-color:var(--line)"><b id="cisternaLibre">$0</b><span>Disponible</span></div>
+          <div class="stat" style="background:#f7f1e6;color:var(--ink);border-color:var(--line)"><b id="cisternaMora">$0</b><span>En mora</span></div>
+        </div>
+      </div>
+      <div class="row">
+        <button class="chip primary" data-open="colocar" type="button">Colocar</button>
+        <button class="chip" data-open="recargar" type="button">Recargar</button>
+      </div>
+      <p class="sub" id="cisternaRegla" style="margin:0 2px 12px"></p>
+      <div id="cisternaCreditos"></div>
+    </section>
+
     <section class="screen" id="scr-prestamos">
       <div class="section-title"><h2>Préstamos</h2><span>Del fondo común</span></div>
       <div id="loans"></div>
@@ -98,9 +116,9 @@
 
     <nav class="nav">
       <button class="on" data-tab="home" type="button"><span class="ic">⌂</span>Caja</button>
+      <button data-tab="cisterna" type="button"><span class="ic">◍</span>Cisterna</button>
       <button data-tab="asamblea" type="button"><span class="ic">☰</span>Asamblea</button>
-      <button data-tab="prestamos" type="button"><span class="ic">↺</span>Préstamos</button>
-      <button data-tab="socios" type="button"><span class="ic">☺</span>Socios</button>
+      <button data-tab="prestamos" type="button"><span class="ic">↺</span>Créditos</button>
       <button data-tab="mapa" type="button"><span class="ic">✧</span>Sembrar</button>
     </nav>
   </div>

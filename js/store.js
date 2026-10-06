@@ -9,6 +9,17 @@ export const MIN_PRESTAMO = 500;
 export const SEMILLA_FONDO = 15000;
 export const SEMILLA_SOCIOS = 8;
 export const FONDO_SIEMBRA = 3500;
+export const CISTERNA_TOPE = 0.15;
+
+export function cisternaBase(capacidad = 100000) {
+  return {
+    capacidad,
+    topePorcentaje: CISTERNA_TOPE,
+    plazoDias: 30,
+    comision: 0.05,
+    creditos: [],
+  };
+}
 
 export const money = (n) =>
   new Intl.NumberFormat("es-MX", {
@@ -62,6 +73,7 @@ export function crearEstadoNuevo({ me, pueblo, estado }) {
       cajaVacia("vecino", "Pueblo vecino", estado, "lista", "Puede pedir caja"),
       cajaVacia("cabecera", "Cabecera", estado, "lejos", "Todavía no pide"),
     ],
+    cisterna: cisternaBase(),
   };
 }
 
@@ -115,7 +127,23 @@ export function crearDemo() {
       cajaVacia("santa-cruz", "Santa Cruz", "Puebla", "lista", "La pide el pueblo"),
       cajaVacia("atenco", "Atenco", "Puebla", "lejos", "Aún no pide caja"),
     ],
+    cisterna: {
+      capacidad: 100000,
+      topePorcentaje: CISTERNA_TOPE,
+      plazoDias: 30,
+      comision: 0.05,
+      creditos: [
+        { id: "c-ramos", who: "Taller Ramos", why: "Refacción", amount: 12000, left: 12000, status: "al corriente", plazo: 30 },
+        { id: "c-luna", who: "Abarrotes Luna", why: "Mercancía", amount: 8000, left: 6400, status: "en mora", plazo: 30 },
+      ],
+    },
   };
+}
+
+export function asegurarCisterna(state) {
+  if (!state.cisterna) state.cisterna = cisternaBase();
+  if (!Array.isArray(state.cisterna.creditos)) state.cisterna.creditos = [];
+  return state.cisterna;
 }
 
 export function loadState() {
@@ -305,4 +333,57 @@ export function proponerPueblo(state, name) {
   if (state.pueblos.some((p) => p.id === id)) return { ok: false, error: "Ese pueblo ya está en el mapa" };
   state.pueblos.push(cajaVacia(id, nombre, estado, "lista", "Lo propuso un socio"));
   return { ok: true, id };
+}
+
+export function resumenCisterna(state) {
+  const c = asegurarCisterna(state);
+  const colocado = c.creditos.reduce((sum, x) => sum + (x.left || 0), 0);
+  const disponible = Math.max(0, c.capacidad - colocado);
+  const mora = c.creditos.filter((x) => x.status === "en mora").reduce((sum, x) => sum + x.left, 0);
+  const tope = Math.round(c.capacidad * c.topePorcentaje);
+  return { ...c, colocado, disponible, mora, tope, nivel: c.capacidad ? colocado / c.capacidad : 0 };
+}
+
+export function recargarCisterna(state, amount) {
+  const n = Math.round(Number(amount));
+  if (!n || n < 500) return { ok: false, error: "Recarga mínima $500" };
+  const c = asegurarCisterna(state);
+  c.capacidad += n;
+  return { ok: true, n };
+}
+
+export function colocarCredito(state, who, amount, why) {
+  const nombre = (who || "").trim();
+  const n = Math.round(Number(amount));
+  const motivo = (why || "").trim();
+  const c = asegurarCisterna(state);
+  const r = resumenCisterna(state);
+  if (nombre.length < 2 || !n || !motivo) return { ok: false, error: "Falta cliente, monto o motivo" };
+  if (n > r.disponible) return { ok: false, error: "No cabe en la cisterna" };
+  if (n > r.tope) return { ok: false, error: `Tope por cliente: ${money(r.tope)}` };
+  const vivo = c.creditos.find((x) => x.who.toLowerCase() === nombre.toLowerCase() && x.left > 0);
+  if (vivo) return { ok: false, error: "Ese cliente ya tiene saldo" };
+  const cargo = Math.round(n * (1 + c.comision));
+  c.creditos.unshift({
+    id: uid("c"),
+    who: nombre,
+    why: motivo,
+    amount: n,
+    left: cargo,
+    status: "al corriente",
+    plazo: c.plazoDias,
+  });
+  return { ok: true, cargo };
+}
+
+export function abonarCisterna(state, creditId, amount) {
+  const n = Math.round(Number(amount));
+  if (!n || n < 50) return { ok: false, error: "Abono mínimo $50" };
+  const c = asegurarCisterna(state);
+  const credito = c.creditos.find((x) => x.id === creditId);
+  if (!credito) return { ok: false, error: "No está ese crédito" };
+  const pago = Math.min(n, credito.left);
+  credito.left -= pago;
+  credito.status = credito.left === 0 ? "liquidado" : "al corriente";
+  return { ok: true, pago };
 }
